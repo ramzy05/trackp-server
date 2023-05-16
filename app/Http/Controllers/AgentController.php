@@ -25,4 +25,19 @@ class AgentController extends Controller
         return response()->json($agent, 200);
     }
 
+    public function updateLocation(Request $request, $userId)
+    {
+        $agent = User::where('role', 'agent')->find($userId);
+
+        if (!$agent) {
+            return response()->json(['error' => 'Agent not found'], 404);
+        }
+
+        $agent->lat = $request->input('lat');
+        $agent->lng = $request->input('lng');
+        $agent->save();
+
+        return response()->json($agent, 200);
+    }
+
 }

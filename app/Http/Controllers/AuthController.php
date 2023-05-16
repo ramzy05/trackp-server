@@ -63,6 +63,7 @@ class AuthController extends Controller
             $user = Auth::user();
             $user->is_online = true;
             $user->save();
+            $user->tokens()->delete();
 
             $authToken= $user->createToken('basic-token',['create','read']);
 

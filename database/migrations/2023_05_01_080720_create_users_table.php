@@ -1,5 +1,4 @@
 <?php
-
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -20,7 +19,9 @@ return new class extends Migration
             $table->string('password');
             $table->enum('role', ['agent', 'admin'])->default('agent');
             $table->boolean('is_online');
-            $table->string('avatar',500)->default('https://avataaars.io/?avatarStyle=Circle&topType=LongHairStraight&accessoriesType=Blank&hairColor=BrownDark&facialHairType=Blank&clotheType=BlazerShirt&eyeType=Default&eyebrowType=Default&mouthType=Default&skinColor=Light');
+            $table->string('avatar', 500)->default('https://avataaars.io/?avatarStyle=Circle&topType=LongHairStraight&accessoriesType=Blank&hairColor=BrownDark&facialHairType=Blank&clotheType=BlazerShirt&eyeType=Default&eyebrowType=Default&mouthType=Default&skinColor=Light');
+            $table->double('lat')->nullable();
+            $table->double('lng')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

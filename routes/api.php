@@ -28,9 +28,10 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get('agents/{userId}', [AgentController::class, 'show']);
     Route::patch('agents/{id}/update', [AdminController::class, 'updateAgent']);
     Route::delete('agents/{id}/delete', [AdminController::class, 'deleteAgent']);
-    Route::post('new-collection/{userId}', [CollectionController::class, 'collecte']);
+    Route::post('new-collection/{agentId}', [CollectionController::class, 'collecte']);
     Route::get('location/{collectionId}', [CollectionController::class, 'getLastLocation']);
     Route::get('location/{collectionId}/all', [CollectionController::class, 'getAllLocations']);
     Route::post('new-location/{collectionId}', [LocationController::class, 'addLocation']);
+    Route::patch('update-location', [LocationController::class, 'updatePosition']);
     Route::post('logout', [AuthController::class,'logout']);
 });

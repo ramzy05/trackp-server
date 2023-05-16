@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('locations', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('collection_id');
-            $table->double('long');
+            $table->double('lng');
             $table->double('lat');
             $table->timestamps();
         });

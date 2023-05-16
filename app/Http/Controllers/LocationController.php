@@ -15,7 +15,7 @@ class LocationController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'lat' => 'required|numeric',
-            'long' => 'required|numeric',
+            'lng' => 'required|numeric',
         ]);
 
         if ($validator->fails()) {
@@ -30,11 +30,51 @@ class LocationController extends Controller
 
         $location = Location::create([
             'lat' => $request->lat,
-            'long' => $request->long,
+            'lng' => $request->lng,
             'collection_id' => $collection->id,
         ]);
 
         return response()->json(['location' => $location], 200);
+    }
+
+    public function updatePosition(Request $request)
+    {
+        $agentId = $request->user()->id; // ID de l'agent connecté
+        $lat = $request->input('lat');
+        $lng = $request->input('lng');
+        $agent = $request->user();
+
+        $agent->lat = $lat;
+        $agent->lng = $lng;
+        $agent->save();
+
+        print($agentId);
+        // Vérifier si l'agent est associé à une collecte active
+        $collection = Collection::where('agent_id', $agentId)
+            ->where('has_started', false)
+            ->first();
+
+        if ($collection) {
+            // Créer une nouvelle location pour la collecte active
+            $location = new Location();
+            $location->collection_id = $collection->id;
+            $location->lat = $lat;
+            $location->lng = $lng;
+            $location->save();
+
+            return response()->json(['message' => 'Location updated',
+                'frequency'=> $collection->frequency,
+                'period'=> $collection->period,
+                'center_lat'=> $collection->center_lat,
+                'center_lng'=> $collection->center_lat,
+                'lat'=> $agent->lat,
+                'lng'=> $agent->lng,
+            ], 200);
+        }
+        return response()->json(['message' => 'Location updated',
+            'lat'=> $agent->lat,
+            'lng'=> $agent->lng,
+        ], 200);
     }
 
 }

@@ -9,11 +9,11 @@ use App\Models\Collection;
 
 class CollectionController extends Controller
 {
-    public function collecte(Request $request, $userId)
+    public function collecte(Request $request, $agentId)
     {
         $validator = Validator::make($request->all(), [
             'center_lat' => 'required|numeric',
-            'center_long' => 'required|numeric',
+            'center_lng' => 'required|numeric',
             'radius' => 'required|numeric',
             'frequency' => 'required|numeric',
             'period' => 'required|numeric',
@@ -23,22 +23,24 @@ class CollectionController extends Controller
             return response()->json(['error' => $validator->errors()], 401);
         }
 
-        $user = User::where(function($query) use ($userId) {
-            $query->where('id', $userId)
-                  ->orWhere('email', $userId)
-                  ->orWhere('username', $userId);
+        $user = $request->user();
+        $agent = User::where(function($query) use ($agentId) {
+            $query->where('id', $agentId)
+                  ->orWhere('email', $agentId)
+                  ->orWhere('username', $agentId);
         })->where('role', 'agent')->first();
 
-        if (!$user) {
-            return response()->json(['error' => 'User not found or not an agent'], 401);
+        if (!$agent) {
+            return response()->json(['error' => 'Agent not found'], 401);
         }
 
         $collection = $user->collections()->create([
             'center_lat' => $request->center_lat,
-            'center_long' => $request->center_long,
+            'center_lng' => $request->center_lng,
             'radius' => $request->radius,
             'frequency' => $request->frequency,
             'period' => $request->period,
+            'agent_id' => $agent->id
         ]);
 
         return response()->json(['collection' => $collection], 200);
