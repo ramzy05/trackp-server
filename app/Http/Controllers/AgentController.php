@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Collection;
+use App\Models\Location;
 use Illuminate\Http\Request;
 
 class AgentController extends Controller
@@ -21,7 +23,6 @@ class AgentController extends Controller
         if (!$agent) {
             return response()->json(['error' => 'Agent not found'], 404);
         }
-        // $agent->makeVisible('password');
         return response()->json($agent, 200);
     }
 
@@ -33,11 +34,101 @@ class AgentController extends Controller
             return response()->json(['error' => 'Agent not found'], 404);
         }
 
-        $agent->lat = $request->input('lat');
-        $agent->lng = $request->input('lng');
-        $agent->save();
+        // Check if the agent is associated with an active collection
+        $collection = $agent->collections()
+            ->where('has_started', true)
+            ->where('is_finished', false)
+            ->first();
 
-        return response()->json($agent, 200);
+        if ($collection) {
+
+            $lat = floatval($request->input('lat'));
+            $lng = floatval($request->input('lng'));
+            // Create a new location entry
+            $location = new Location();
+            $location->collection_id = $collection->id;
+            $location->lat = $lat;
+            $location->lng = $lng;
+            $location->save();
+
+            // Update agent's coordinates
+            $agent->lat = $lat;
+            $agent->lng = $lng;
+            $agent->save();
+
+            return response()->json([
+                'agent'=>$agent,
+                'collection'=>$collection
+            ], 200);
+        }
+
+        return response()->json([
+            'agent'=>$agent
+        ], 200);
     }
+
+
+    public function getAgentsWithLatestIncompleteCollection()
+    {
+        $agents = User::where('role', 'agent')->get();
+
+        $agentsWithCollections = [];
+
+        foreach ($agents as $agent) {
+            $latestCollection = $agent->collections()
+                ->where('is_finished', false)
+                ->latest('created_at')
+                ->first();
+
+            if ($latestCollection) {
+                $agentsWithCollections[] = [
+                    'agent' => $agent,
+                    'collection' => $latestCollection,
+                ];
+            }
+        }
+
+        return response()->json([
+            'agentsWithCollections' => $agentsWithCollections,
+        ]);
+    }
+    public function agentsWithPendingCollections(Request $request)
+    {
+        $agents = User::where('role', 'agent')->get();
+
+        foreach ($agents as $agent) {
+            $latestCollection = Collection::where('agent_id', $agent->id)
+                ->where('is_finished', false)
+                ->latest('created_at')
+                ->first();
+
+            if ($latestCollection) {
+                $agent->collection = $latestCollection;
+            } else {
+                $agents = $agents->reject(function ($item) use ($agent) {
+                    return $item->id === $agent->id;
+                });
+            }
+        }
+
+        return response()->json([
+            'agents' => $agents
+        ]);
+    }
+
+    public function agentsWithNoCollections(Request $request)
+    {
+        $agents = User::where('role', 'agent')
+            ->whereDoesntHave('collections', function ($query) {
+                $query->where('is_finished', false);
+            })
+            ->with('collections')
+            ->get();
+
+        return response()->json([
+            'agents' => $agents,
+        ]);
+    }
+
 
 }

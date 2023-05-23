@@ -29,10 +29,11 @@ class LocationController extends Controller
         }
 
         $location = Location::create([
-            'lat' => $request->lat,
-            'lng' => $request->lng,
+            'lat' => floatval($request->lat),
+            'lng' => floatval($request->lng),
             'collection_id' => $collection->id,
         ]);
+
 
         return response()->json(['location' => $location], 200);
     }
@@ -40,15 +41,14 @@ class LocationController extends Controller
     public function updatePosition(Request $request)
     {
         $agentId = $request->user()->id; // ID de l'agent connecté
-        $lat = $request->input('lat');
-        $lng = $request->input('lng');
+        $lat = floatval($request->input('lat'));
+        $lng = floatval($request->input('lng'));
         $agent = $request->user();
 
         $agent->lat = $lat;
         $agent->lng = $lng;
         $agent->save();
 
-        print($agentId);
         // Vérifier si l'agent est associé à une collecte active
         $collection = Collection::where('agent_id', $agentId)
             ->where('has_started', false)
@@ -63,10 +63,7 @@ class LocationController extends Controller
             $location->save();
 
             return response()->json(['message' => 'Location updated',
-                'frequency'=> $collection->frequency,
-                'period'=> $collection->period,
-                'center_lat'=> $collection->center_lat,
-                'center_lng'=> $collection->center_lat,
+                'collection'=> $collection,
                 'lat'=> $agent->lat,
                 'lng'=> $agent->lng,
             ], 200);

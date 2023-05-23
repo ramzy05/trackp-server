@@ -63,18 +63,27 @@ class AuthController extends Controller
             $user = Auth::user();
             $user->is_online = true;
             $user->save();
-            $user->tokens()->delete();
 
-            $authToken= $user->createToken('basic-token',['create','read']);
+            $existingToken = $user->tokens()->where('name', 'basic-token')->first();
 
-            if ($user->role=="admin") {
-                $authToken = $user->createToken('admin-token',['create','update','delete']);
-                $user->authToken =  $authToken->plainTextToken;
-                return response()->json([
-                    'user' => $user,
-                ], 200);
+            if ($existingToken) {
+                $user->authToken = $existingToken->plainTextToken;
+            } else {
+                $authToken = $user->createToken('basic-token', ['create', 'read']);
+                $user->authToken = $authToken->plainTextToken;
             }
-            $user->authToken =  $authToken->plainTextToken;
+
+            if ($user->role == "admin") {
+                $existingAdminToken = $user->tokens()->where('name', 'admin-token')->first();
+
+                if ($existingAdminToken) {
+                    $user->authToken = $existingAdminToken->plainTextToken;
+                } else {
+                    $authToken = $user->createToken('admin-token', ['create', 'update', 'delete']);
+                    $user->authToken = $authToken->plainTextToken;
+                }
+            }
+
             return response()->json([
                 'user' => $user,
             ], 200);
@@ -82,6 +91,7 @@ class AuthController extends Controller
 
         return response()->json(['error' => 'Invalid Credentials'], 401);
     }
+
 
     public function logout(Request $request)
     {

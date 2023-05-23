@@ -46,6 +46,11 @@ return [
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DATABASE_URL'),
+            // 'host' => env('DB_HOST', 'localhost'),
+            // 'port' => env('DB_PORT', '3306'),
+            // 'database' => env('DB_DATABASE', 'id20799031_trackpapi'),
+            // 'username' => env('DB_USERNAME', 'id20799031_root'),
+            // 'password' => env('DB_PASSWORD', 'Password!!2023'),
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
             'database' => env('DB_DATABASE', 'forge'),

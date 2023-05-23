@@ -28,6 +28,8 @@ class User extends Model implements Authenticatable
         'remember_token',
     ];
 
+    protected $appends = ['fullname'];
+
     // Définition d'une valeur par défaut pour is_online
     protected $attributes = [
         'is_online' => false,
@@ -68,4 +70,14 @@ class User extends Model implements Authenticatable
     {
         return 'remember_token';
     }
+
+    // Accessor for the fullname attribute
+    public function getFullnameAttribute()
+    {
+        $firstname = ucfirst(strtolower($this->attributes['firstname']));
+        $lastname = ucfirst(strtolower($this->attributes['lastname']));
+
+        return $firstname . ' ' . $lastname;
+    }
+
 }

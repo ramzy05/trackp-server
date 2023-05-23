@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Collection;
+use App\Models\Location;
 
 class CollectionController extends Controller
 {
@@ -79,6 +81,109 @@ class CollectionController extends Controller
         }
 
         return response()->json(['location' => $location], 200);
+    }
+
+    public function startCollection(Request $request, $id)
+    {
+        // Recherche de la collection par son ID
+        $collection = Collection::findOrFail($id);
+
+        // Mise à jour de la valeur de has_started à true
+        $collection->has_started = true;
+        $collection->save();
+
+        // Renvoi de la collection mise à jour
+        return response()->json([
+            "collection"=>$collection
+        ]);
+    }
+    public function stopCollection(Request $request, $id)
+    {
+        // Recherche de la collection par son ID
+        $collection = Collection::findOrFail($id);
+
+        $collection->has_started = false;
+        $collection->is_finished = true;
+        $collection->save();
+
+        // Renvoi de la collection mise à jour
+        return response()->json([
+            "collection"=>$collection
+        ]);
+    }
+
+    public function checkAgentLocation($collectionId)
+    {
+        // Vérifier si l'agent a une collection active en cours
+        $collection = Collection::find($collectionId);
+
+        if (!$collection) {
+            return response()->json(['error' => 'Collection not found'], 404);
+        }
+
+        // Récupérer la dernière localisation pour la collection
+        $latestLocation = Location::where('collection_id', $collection->id)
+            ->latest()
+            ->first();
+
+        if (!$latestLocation) {
+            return response()->json(['error' => 'No location found for the collection'], 404);
+        }
+
+        // Calculer la distance entre la localisation et le centre de la zone
+        $centerLat = $collection->center_lat;
+        $centerLng = $collection->center_lng;
+        $distance = $this->calculateDistance($latestLocation->lat, $latestLocation->lng, $centerLat, $centerLng);
+
+        // Convertir le rayon en mètres
+        $radiusInMeters = $collection->radius;
+
+        // Vérifier si l'agent est dans la zone
+        $isInArea = $distance <= $radiusInMeters;
+
+        // Vérifier si la collecte doit être arrêtée
+        $collecteStop = false;
+        $currentDateTime = now();
+        $endDateTime = Carbon::parse($collection->end_date);
+
+        // if ($currentDateTime >= $endDateTime) {
+        //     $collecteStop = true;
+        // }
+
+        // Préparer la réponse JSON
+        $response = [
+            'location' => $latestLocation,
+            'distance' => $distance,
+            'isInArea' => $isInArea,
+            'collecteStop' => $collecteStop,
+        ];
+
+        if ($collecteStop) {
+            //stop collecte
+            // $collection->has_started = false;
+            // $collection->is_finished = true;
+            // $collection->save();
+
+            return response()->json(['collecteStop' => true], 200);
+        } else {
+            return response()->json($response, 200);
+        }
+    }
+
+    private function calculateDistance($lat1, $lng1, $lat2, $lng2)
+    {
+        // Calculer la distance entre deux coordonnées en utilisant la formule Haversine
+        $earthRadius = 6371000; // Rayon de la Terre en mètres
+
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLng = deg2rad($lng2 - $lng1);
+
+        $a = sin($dLat / 2) * sin($dLat / 2) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLng / 2) * sin($dLng / 2);
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        $distance = $earthRadius * $c;
+
+        return $distance;
     }
 
 }
