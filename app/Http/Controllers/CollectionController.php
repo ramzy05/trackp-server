@@ -8,6 +8,8 @@ use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Collection;
 use App\Models\Location;
+use App\Mail\OutOfAreaEmail;
+use Illuminate\Support\Facades\Mail;
 
 class CollectionController extends Controller
 {
@@ -120,6 +122,7 @@ class CollectionController extends Controller
         if (!$collection) {
             return response()->json(['error' => 'Collection not found'], 404);
         }
+        $agent = User::findOrFail($collection->agent_id);
 
         // Récupérer la dernière localisation pour la collection
         $latestLocation = Location::where('collection_id', $collection->id)

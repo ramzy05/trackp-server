@@ -22,6 +22,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('register', [AuthController::class,'register']);
 Route::post('login', [AuthController::class,'login']);
+Route::get('location/{collectionId}', [CollectionController::class, 'getLastLocation']);
+
 
 Route::group(['middleware' => 'auth:api'], function () {
     Route::get('agents', [AgentController::class, 'index']);
@@ -31,7 +33,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::post('agents/{id}/update', [AdminController::class, 'updateAgent']);
     Route::post('agents/{id}/delete', [AdminController::class, 'deleteAgent']);
     Route::post('new-collection/{agentId}', [CollectionController::class, 'collecte']);
-    Route::get('location/{collectionId}', [CollectionController::class, 'getLastLocation']);
+    // Route::get('location/{collectionId}', [CollectionController::class, 'getLastLocation']);
     Route::get('get-location/{collectionId}', [CollectionController::class, 'checkAgentLocation']);
     Route::post('start/{id}', [CollectionController::class, 'startCollection']);
     Route::post('stop/{id}', [CollectionController::class, 'stopCollection']);
