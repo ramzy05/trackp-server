@@ -35,6 +35,8 @@ class User extends Model implements Authenticatable
         'is_online' => false,
     ];
 
+
+
     public function collections()
     {
         return $this->hasMany(Collection::class);

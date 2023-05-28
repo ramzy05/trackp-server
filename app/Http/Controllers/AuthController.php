@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 
+
 class AuthController extends Controller
 {
     public function register(Request $request)
@@ -64,24 +65,12 @@ class AuthController extends Controller
             $user->is_online = true;
             $user->save();
 
-            $existingToken = $user->tokens()->where('name', 'basic-token')->first();
-
-            if ($existingToken) {
-                $user->authToken = $existingToken->plainTextToken;
-            } else {
+            if ($user->role == "admin") {
+                $authToken = $user->createToken('admin-token', ['create', 'update', 'delete']);
+                $user->authToken = $authToken->plainTextToken;
+            }else{
                 $authToken = $user->createToken('basic-token', ['create', 'read']);
                 $user->authToken = $authToken->plainTextToken;
-            }
-
-            if ($user->role == "admin") {
-                $existingAdminToken = $user->tokens()->where('name', 'admin-token')->first();
-
-                if ($existingAdminToken) {
-                    $user->authToken = $existingAdminToken->plainTextToken;
-                } else {
-                    $authToken = $user->createToken('admin-token', ['create', 'update', 'delete']);
-                    $user->authToken = $authToken->plainTextToken;
-                }
             }
 
             return response()->json([

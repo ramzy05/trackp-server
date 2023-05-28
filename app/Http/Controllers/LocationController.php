@@ -51,7 +51,8 @@ class LocationController extends Controller
 
         // Vérifier si l'agent est associé à une collecte active
         $collection = Collection::where('agent_id', $agentId)
-            ->where('has_started', false)
+            ->where('has_started', true)
+            ->where('is_finished', false)
             ->first();
 
         if ($collection) {
