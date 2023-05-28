@@ -114,7 +114,7 @@ class CollectionController extends Controller
         ]);
     }
 
-    public function checkAgentLocation($collectionId)
+    public function checkAgentLocation(Request $request ,$collectionId)
     {
         // Vérifier si l'agent a une collection active en cours
         $collection = Collection::find($collectionId);
@@ -143,15 +143,27 @@ class CollectionController extends Controller
 
         // Vérifier si l'agent est dans la zone
         $isInArea = $distance <= $radiusInMeters;
+        if($isInArea === false){
+            $latestLocation->is_in_area = false;
+            $latestLocation->save();
+
+            if(!$collection->is_violated){
+                Mail::to($request->user())->send(new OutOfAreaEmail($agent));
+                $collection->is_violated = true;
+                $collection->save();
+            }else{
+
+            }
+        }
 
         // Vérifier si la collecte doit être arrêtée
         $collecteStop = false;
         $currentDateTime = now();
         $endDateTime = Carbon::parse($collection->end_date);
 
-        // if ($currentDateTime >= $endDateTime) {
-        //     $collecteStop = true;
-        // }
+        if ($currentDateTime >= $endDateTime) {
+            $collecteStop = true;
+        }
 
         // Préparer la réponse JSON
         $response = [
@@ -163,14 +175,14 @@ class CollectionController extends Controller
 
         if ($collecteStop) {
             //stop collecte
-            // $collection->has_started = false;
-            // $collection->is_finished = true;
-            // $collection->save();
+            $collection->has_started = false;
+            $collection->is_finished = true;
+            $collection->save();
 
-            return response()->json(['collecteStop' => true], 200);
-        } else {
-            return response()->json($response, 200);
+            // return response()->json(['collecteStop' => true], 200);
         }
+        return response()->json($response, 200);
+
     }
 
     private function calculateDistance($lat1, $lng1, $lat2, $lng2)

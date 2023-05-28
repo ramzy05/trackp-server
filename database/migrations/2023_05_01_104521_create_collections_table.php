@@ -21,6 +21,7 @@ return new class extends Migration
             $table->double('period');
             $table->boolean('has_started')->default(false);
             $table->boolean('is_finished')->default(false);
+            $table->boolean('is_violated')->default(false);
             $table->timestamp('start_date')->nullable();
             $table->timestamp('end_date')->nullable();
             $table->timestamps();

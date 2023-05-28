@@ -16,6 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('collection_id');
             $table->double('lng');
             $table->double('lat');
+            $table->boolean('is_in_area')->default(true);
             $table->timestamps();
         });
     }
