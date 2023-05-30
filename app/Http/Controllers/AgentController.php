@@ -96,6 +96,8 @@ class AgentController extends Controller
     {
         $agents = User::where('role', 'agent')->get();
 
+        $tempAgents = [];
+
         foreach ($agents as $agent) {
             $latestCollection = Collection::where('agent_id', $agent->id)
                 ->where('is_finished', false)
@@ -104,12 +106,11 @@ class AgentController extends Controller
 
             if ($latestCollection) {
                 $agent->collection = $latestCollection;
-            } else {
-                $agents = $agents->reject(function ($item) use ($agent) {
-                    return $item->id === $agent->id;
-                });
+                $tempAgents[] = $agent;
             }
         }
+
+        $agents = $tempAgents;
 
         return response()->json([
             'agents' => $agents
@@ -124,6 +125,10 @@ class AgentController extends Controller
             })
             ->with('collections')
             ->get();
+
+        if ($agents->count() === 1) {
+            $agents = [$agents];
+        }
 
         return response()->json([
             'agents' => $agents,
